@@ -1,0 +1,24 @@
+services:
+   postgres:
+     image: postgres:15-alpine
+     container_name: api_monitoring_postgers
+     environment:
+       POSTGRES_DB: api_monitoring
+       POSTGRES_USER: manoj
+       POSTGRES_PASSWORD: manoj
+       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=en_US.UTF-8"
+     ports:
+       - "5432:5432"  
+     volumes:
+       - ./postgres-data:/var/lib/postgresql/data 
+       - ./scripts/init_postgres.sql:
+         target: /docker-entrypoint-initdb.d/init_postgres.sql
+         type: bind 
+     networks:
+       - api_monitoring_network
+     restart: unless-stopped  
+     healthcheck:
+       test: ["CMD-SHELL", "pg_isready -U manoj"]
+       interval: 10s
+       timeout: 5s
+       retries: 5
