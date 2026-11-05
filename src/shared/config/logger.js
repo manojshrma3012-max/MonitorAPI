@@ -13,7 +13,6 @@ const logger = winston.createLogger({
         winston.format.splat(),
         winston.format.json()
     ),
-
     defaultMeta: { service: "api-monitoring" },
 
     transports: [
