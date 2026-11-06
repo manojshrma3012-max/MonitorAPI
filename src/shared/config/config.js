@@ -7,7 +7,6 @@ const config = {
         uri: process.env.MONGO_URI || 'mongodb://localhost:27017/api_monitoring',
     },
     postgres: {
-        database: process.env.PG_DATABASE || 'api_monitoring',
         url : process.env.POSTGRES_SQL_URL 
     },
     rabbitmq: {

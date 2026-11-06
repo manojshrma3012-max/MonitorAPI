@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 
-import config from "./index.js";
+import config from "./config.js";
 import logger from "./logger.js";
 
 class PostgresConnection {
@@ -11,7 +11,7 @@ class PostgresConnection {
     getPool() {
         if (!this.pool) {
             this.pool = new Pool({
-                connectionString: config.postgres.connectionString,
+                connectionString: config.postgres.url,
                 max: 20,
                 idleTimeoutMillis: 30000,
                 connectionTimeoutMillis: 5000,
