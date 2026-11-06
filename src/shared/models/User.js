@@ -1,44 +1,112 @@
-import mongoose from 'mongoose'
-const UserSchema = new mongoose.Schema({
-    username:{
-        type:String,
-        required:true,
-        unique:true,
-        trim:true,
-        minlength:3,
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs"
+import SecurityUtils from "../utils/securityutils.js";
+
+const userSchema = new mongoose.Schema({
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        minlength: 3,
         validate: {
-            validator: function(v) {
-                return /^[a-zA-Z0-9]+$/.test(v);
+            validator: function (userName) {
+                return /^[a-zA-Z0-9_.-]+$/.test(userName);
             },
-            message: "Username can only contain letters and numbers"
+            message: "Please enter a valid username"
         }
     },
-    email:{
-        type:String,
-        required:true,
-        unique:true,
-        trim:true,
-        lowercase:true,
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true,
         validate: {
-            validator: function(v) {
-                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+            validator: function (email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
             },
-            message: "Please enter a valid email address"
+            message: "Please enter a valid email"
         }
     },
-    password:{
-        type:String,
-        required:true,
-        minlength:6,
+    password: {
+        type: String,
+        required: true,
+        minlength: 6,
         validate: {
-            validator: function(v) {
-                return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(v);
+            validator: function (password) {
+                if (this.isModified('password') && password && !password.startsWith('$2a$')) {
+                    const validation = SecurityUtils.validatePassword(password)
+                    return validation.success
+                };
+                return true
             },
-            message: "Password must be at least 6 characters long and contain at least one letter and one number"
+            message: function (props) {
+                if (props.value && !props.value.startsWith('$2a$')) {
+                    const validation = SecurityUtils.validatePassword(props.value)
+                    return validation.errors.join(". ");
+                };
+                return "Password validation failed"
+            }
+        },
+    },
+    role: {
+        type: String,
+        enum: ['super_admin', 'client_admin', 'client_viewer'],
+        default: 'client_viewer'
+    },
+    clientId: {
+        type: mongoose.Schema.Types.ObjectId, // 123
+        ref: "Client",
+        required: function () {
+            return this.role !== "super_admin"
         }
     },
-    createdAt:{
-        type:Date,
-        default:Date.now
-    }
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
+    permissions: {
+        canCreateApiKeys: {
+            type: Boolean,
+            default: false,
+        },
+        canManageUsers: {
+            type: Boolean,
+            default: false,
+        },
+        canViewAnalytics: {
+            type: Boolean,
+            default: true,
+        },
+        canExportData: {
+            type: Boolean,
+            default: false,
+        },
+    },
+}, {
+    timestamps: true,
+    collection: "users"
 })
+
+// Hash password before saving
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) {
+        return next();
+    }
+
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
+
+userSchema.index({ clientId: 1, isActive: 1 });
+userSchema.index({ role: 1 })
+
+const User = mongoose.model("User", userSchema)
+export default User

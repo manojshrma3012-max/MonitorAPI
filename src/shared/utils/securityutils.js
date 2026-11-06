@@ -1,6 +1,4 @@
 class SecurityUtils {
-
-    // Password requirements can be configured via environment variables
     static PASSWORD_REQUIREMENTS = {
         minLength: parseInt(process.env.PASSWORD_MIN_LENGTH || '8'),
         requireUppercase: (process.env.PASSWORD_REQUIRE_UPPERCASE || 'true') === 'true',
@@ -48,7 +46,6 @@ class SecurityUtils {
         if (weakPasswords.includes(password.toLowerCase())) {
             errors.push('Password is too common and easily guessable');
         }
-
         return {
             success: errors.length === 0,
             errors,
