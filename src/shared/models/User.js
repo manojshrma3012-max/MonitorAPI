@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs"
 import SecurityUtils from "../utils/securityutils.js";
-
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
@@ -56,7 +55,7 @@ const userSchema = new mongoose.Schema({
         default: 'client_viewer'
     },
     clientId: {
-        type: mongoose.Schema.Types.ObjectId, // 123
+        type: mongoose.Schema.Types.ObjectId, 
         ref: "Client",
         required: function () {
             return this.role !== "super_admin"
@@ -88,8 +87,6 @@ const userSchema = new mongoose.Schema({
     timestamps: true,
     collection: "users"
 })
-
-// Hash password before saving
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {
         return next();
@@ -103,10 +100,7 @@ userSchema.pre('save', async function (next) {
         next(error);
     }
 });
-
-
 userSchema.index({ clientId: 1, isActive: 1 });
 userSchema.index({ role: 1 })
-
 const User = mongoose.model("User", userSchema)
 export default User
